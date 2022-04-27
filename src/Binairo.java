@@ -24,7 +24,6 @@ public class Binairo {
         System.out.println("Initial Board: \n");
         state.printBoard();
         drawLine();
-        //System.out.println("DFgdfgdfgdfgdgdfgdfgfdgg");
 
         State res = backtrack(state);
         if (res != null) {
@@ -39,68 +38,112 @@ public class Binairo {
         System.out.println("Total time: " + (tEnd - tStart)/1000000000.000000000);
     }
 
+    private State AC3(State state) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (state.getBoard().get(i).get(j).equals("E")) {
+                    for (int k = 0; k < state.getDomain().get(i).get(j).size(); k++) {
+                        String s = state.getDomain().get(i).get(j).get(k);
+                        state.setIndexBoard(i, j, s);
+                        if (isConsistent(state) == null) {
+                            state.removeIndexDomain(i, j, s);
+                            if (state.getDomain().get(i).get(j).isEmpty())
+                                return null;
+                            else {
+                                s = state.getDomain().get(i).get(j).get(0);
+                                state.setIndexBoard(i, j, s);
+                                state = isConsistent(state);
+                                if (state == null)
+                                    return null;
+                            }
+                        }
+                    }
+                    state.setIndexBoard(i, j, "E");
+                }
+            }
+        }
+        return state;
+    }
+
     private State backtrack(State state) {
         if (allAssigned(state))
             return state;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
+        state = AC3(state);
+        if (state == null)
+            return null;
 
-                    if (state.getBoard().get(i).get(j).equals("E")) {
-                        System.out.println("Empty " + i + " " + j);
-                        String s = "w";
-                        while(!state.getDomain().get(i).get(j).isEmpty()) {
-                            ArrayList<ArrayList<String>> cBoard = state.getBoard();
-                            ArrayList<ArrayList<ArrayList<String>>> cDomain = state.getDomain();
+        for (int MRV = 1; MRV < 3; MRV++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (state.getBoard().get(i).get(j).equals("E") && state.getDomain().get(i).get(j).size() == MRV) {
+                        if (MRV == 1) {
+                            String s = state.getDomain().get(i).get(j).get(0);
+                            State newState = state.copy();
 
-                            System.out.println(i + " " + j + " " + s);
-                            cBoard.get(i).set(j, s);
-                            cDomain.get(i).set(j, new ArrayList<>(List.of(
-                                    "n"
-                            )));
-                            state.getDomain().get(i).get(j).remove(s);
+                            newState.setIndexBoard(i, j, s);
 
-                            State newState = new State(cBoard, cDomain);
-
-                            if (isConsistent(newState)) {
-                                System.out.println("raft tu");
-                                State res = backtrack(newState);
-                                if (res!= null) {
-                                    //System.out.println("answer found");
-                                    return res;
-                                }
-                                else if (s.equals("b")) {
-                                    System.out.println("bargasht");
-                                    cBoard.get(i).set(j, "E");
-                                    cDomain.get(i).set(j, new ArrayList<>(List.of(
-                                            "w",
-                                            "b"
-                                    )));
-                                    return null;
-                                }
-                            }
-                            else if(s.equals("b")) {
-                                System.out.println("bargasht 2");
-                                cBoard.get(i).set(j, "E");
-                                cDomain.get(i).set(j, new ArrayList<>(List.of(
-                                        "w",
-                                        "b"
-                                )));
+                            newState = isConsistent(newState);
+                            if (newState != null) {
+                                return backtrack(newState);
+                            } else
                                 return null;
+                        }
+
+                        else {
+                            String s = state.getDomain().get(i).get(j).get(0);
+                            String s1 = state.getDomain().get(i).get(j).get(1);
+
+                            State newState = state.copy();
+                            State newState1 = state.copy();
+
+                            newState.setIndexBoard(i, j, s);
+                            newState1.setIndexBoard(i, j, s1);
+
+                            newState = isConsistent(newState);
+                            newState1 = isConsistent(newState1);
+
+                            if (newState != null && newState1 == null) {
+                                return backtrack(newState);
                             }
-                            s = "b";
+
+                            else if (newState1 != null && newState == null) {
+                                return backtrack(newState1);
+                            }
+
+                            else if (newState != null) {
+                                if (newState1.limit > newState.limit) {
+                                    newState = backtrack(newState);
+                                    if (newState == null) {
+                                        return backtrack(newState1);
+                                    } else
+                                        return newState;
+                                } else {
+                                    newState1 = backtrack(newState1);
+                                    if (newState1 == null) {
+                                        return backtrack(newState);
+                                    } else
+                                        return newState1;
+                                }
+                            }
+
+                            else
+                                return null;
                         }
                     }
+                }
             }
         }
-
-        return null;
+        return state;
     }
 
-    
+
+
     private State checkNumberOfCircles(State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
         State newState = state.copy();
+        newState.limit = 0;
+
         //row
         for (int i = 0; i < n; i++) {
             int numberOfWhites = 0;
@@ -179,9 +222,10 @@ public class Binairo {
         return newState;
     }
     
-    private State checkAdjacency(State state) {
+    private State checkAdjacency(State state, int l) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
         State newState = state.copy();
+        newState.limit = l;
 
         //Horizontal
         for (int i = 0; i < n; i++) {
@@ -226,30 +270,29 @@ public class Binairo {
                 String c2 = cBoard.get(i+1).get(j).toUpperCase();
                 String c3 = cBoard.get(i+2).get(j).toUpperCase();
                 if (c1.equalsIgnoreCase(c2) && c2.equalsIgnoreCase(c3) && !c1.equalsIgnoreCase("E")) {
-                    //System.out.println("col");
                     return null;
                 }
                 else if ( c1.equalsIgnoreCase(c2) && c3.equals("E")
-                        && newState.getDomain().get(i).get(j + 2).contains(c1.toLowerCase())) {
-                    newState.removeIndexDomain(i, j + 2, c1.toLowerCase());
+                        && newState.getDomain().get(i + 2).get(j).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i + 2, j, c1.toLowerCase());
                     newState.limit++;
-                    if (newState.getDomain().get(i).get(j + 2).isEmpty())
+                    if (newState.getDomain().get(i + 2).get(j).isEmpty())
                         return null;
                 }
 
                 else if (c1.equalsIgnoreCase(c3) && c2.equals("E")
-                        && newState.getDomain().get(i).get(j + 1).contains(c1.toLowerCase())) {
-                    newState.removeIndexDomain(i, j + 1, c1.toLowerCase());
+                        && newState.getDomain().get(i + 1).get(j).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i + 1, j, c1.toLowerCase());
                     newState.limit++;
-                    if (newState.getDomain().get(i).get(j + 1).isEmpty())
+                    if (newState.getDomain().get(i + 1).get(j).isEmpty())
                         return null;
                 }
 
                 else if (c2.equalsIgnoreCase(c3) && c1.equals("E")
                         && newState.getDomain().get(i).get(j).contains(c2.toLowerCase())) {
-                    newState.removeIndexDomain(i, j , c2.toLowerCase());
+                    newState.removeIndexDomain(i, j, c2.toLowerCase());
                     newState.limit++;
-                    if (newState.getDomain().get(i).get(j ).isEmpty())
+                    if (newState.getDomain().get(i).get(j).isEmpty())
                         return null;
                 }
             }
@@ -257,22 +300,48 @@ public class Binairo {
 
         return newState;
     }
-    
-    private boolean checkIfUnique (State state) {
+
+    private State checkIfUnique (State state, int l) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
-        
+        State newState = state.copy();
+        newState.limit = l;
+
         //check if two rows are duplicated
         for (int i = 0; i < n-1; i++) {
             for (int j = i+1; j < n; j++) {
                 int count = 0;
+                int temp=-1;
                 for (int k = 0; k < n; k++) {
                     String a = cBoard.get(i).get(k);
-                    if (a.equals(cBoard.get(j).get(k)) && !a.equals("E")) {
+                    String b = cBoard.get(j).get(k);
+                    if (a.equalsIgnoreCase(b) && !a.equals("E")) {
                         count++;
                     }
+                    else if (!a.equalsIgnoreCase(b) && (a.equals("E") || b.equals("E")))
+                        temp = k;
                 }
                 if (count == n) {
-                    return false;
+                    return null;
+                }
+
+                if (count == n - 1 && temp!=-1) {
+                    String a = cBoard.get(i).get(temp);
+                    String b = cBoard.get(j).get(temp);
+                    if ( a.equals("E")) {
+                        if(newState.getDomain().get(i).get(temp).contains(b)) {
+                            newState.removeIndexDomain(i, temp, b);
+                            newState.limit++;
+                            if (newState.getDomain().get(i).get(temp).isEmpty())
+                                return null;
+                        }
+                    } else {
+                        if (newState.getDomain().get(j).get(temp).contains(a)) {
+                            newState.removeIndexDomain(j, temp, a);
+                            newState.limit++;
+                            if (newState.getDomain().get(j).get(temp).isEmpty())
+                                return null;
+                        }
+                    }
                 }
             }
         }
@@ -282,18 +351,42 @@ public class Binairo {
         for (int j = 0; j < n-1; j++) {
             for (int k = j+1; k < n; k++) {
                 int count = 0;
+                int temp = -1;
                 for (int i = 0; i < n; i++) {
+                    String a = cBoard.get(i).get(j);
+                    String b = cBoard.get(i).get(k);
                     if (cBoard.get(i).get(j).equals(cBoard.get(i).get(k))) {
                         count++;
                     }
+                    else if (!a.equalsIgnoreCase(b) && (a.equals("E") || b.equals("E")))
+                        temp = k;
                 }
                 if (count == n) {
-                    return false;
+                    return null;
+                }
+                if (count == n - 1 && temp!=-1) {
+                    String a = cBoard.get(temp).get(j);
+                    String b = cBoard.get(temp).get(k);
+                    if (a.equals("E")) {
+                        if(newState.getDomain().get(temp).get(j).contains(b)) {
+                            newState.removeIndexDomain(temp, j, b);
+                            newState.limit++;
+                            if (newState.getDomain().get(temp).get(j).isEmpty())
+                                return null;
+                        }
+                    } else {
+                        if (newState.getDomain().get(temp).get(k).contains(a)) {
+                            newState.removeIndexDomain(temp, k, a);
+                            newState.limit++;
+                            if (newState.getDomain().get(temp).get(k).isEmpty())
+                                return null;
+                        }
+                    }
                 }
             }
         }
 
-        return true;
+        return newState;
     }
     
     private boolean allAssigned(State state) {
@@ -308,20 +401,20 @@ public class Binairo {
         }
         return true;
     }
-        
 
-    private boolean isFinished(State state) {
-        return allAssigned(state) && checkAdjacency(state) && checkNumberOfCircles(state) && checkIfUnique(state);
-    }
-
-    private boolean isConsistent(State state) {
-        if (checkNumberOfCircles(state))
-            System.out.println("number");
-        if (checkAdjacency(state))
-            System.out.println("adj");
-        if (checkIfUnique(state))
-            System.out.println("uniq");
-        return checkNumberOfCircles(state) && checkAdjacency(state) && checkIfUnique(state);
+    private State isConsistent(State state) {
+        State newState = checkNumberOfCircles(state);
+        if (newState == null) {
+            return null;
+        } else {
+            newState = checkAdjacency(newState, newState.limit);
+            if (newState == null) {
+                return null;
+            } else {
+                newState = checkIfUnique(newState, newState.limit);
+                return newState;
+            }
+        }
     }
 
     private void drawLine() {
