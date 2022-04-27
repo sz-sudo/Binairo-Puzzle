@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 public class Binairo {
@@ -97,7 +98,7 @@ public class Binairo {
     }
 
     
-    private boolean checkNumberOfCircles(State state) {
+    private State checkNumberOfCircles(State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
         State newState = state.copy();
         //row
@@ -112,7 +113,7 @@ public class Binairo {
                 }
             }
             if (numberOfBlacks > n/2 || numberOfWhites > n/2) {
-                return false;
+                return null;
             }
             if (numberOfBlacks == n/2) {
                 for (int j = 0; j < n; j++) {
@@ -149,67 +150,112 @@ public class Binairo {
                 }
             }
             if (numberOfBlacks > n/2 || numberOfWhites > n/2) {
-                return false;
+                return null;
             }
 
             if (numberOfBlacks == n/2) {
                 for (int j = 0; j < n; j++) {
-                    String a = cBoard.get(i).get(j);
-                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("b")) {
-                        newState.removeIndexDomain(i, j, "b");
+                    String a = cBoard.get(j).get(i);
+                    if (a.equals("E") && newState.getDomain().get(j).get(i).contains("b")) {
+                        newState.removeIndexDomain(j, i, "b");
                         newState.limit++;
-                        if (newState.getDomain().get(i).get(j).isEmpty())
+                        if (newState.getDomain().get(j).get(i).isEmpty())
                             return null;
                     }
                 }
             }
             if (numberOfWhites == n/2) {
                 for (int j = 0; j < n; j++) {
-                    String a = cBoard.get(i).get(j);
-                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("a")) {
-                        newState.removeIndexDomain(i, j, "a");
+                    String a = cBoard.get(j).get(i);
+                    if (a.equals("E") && newState.getDomain().get(j).get(i).contains("a")) {
+                        newState.removeIndexDomain(j, i, "a");
                         newState.limit++;
-                        if (newState.getDomain().get(i).get(j).isEmpty())
+                        if (newState.getDomain().get(j).get(i).isEmpty())
                             return null;
                     }
                 }
             }
         }
-        return true;
+        return newState;
     }
     
-    private boolean checkAdjacency(State state) {
+    private State checkAdjacency(State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
+        State newState = state.copy();
 
         //Horizontal
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n-2; j++) {
                 ArrayList<String> row = cBoard.get(i);
-                String c1 = row.get(j).toUpperCase();
-                String c2 = row.get(j+1).toUpperCase();
-                String c3 = row.get(j+2).toUpperCase();
-                if (c1.equals(c2) && c2.equals(c3) && !c1.equals("E")) {
+                String c1 = row.get(j);
+                String c2 = row.get(j+1);
+                String c3 = row.get(j+2);
+                if (c1.equalsIgnoreCase(c2) && c2.equalsIgnoreCase(c3) && !c1.equals("E")) {
+                    return null;
+                }
+                else if ( c1.equalsIgnoreCase(c2) && c3.equals("E")
+                        && newState.getDomain().get(i).get(j + 2).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i, j + 2, c1.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j + 2).isEmpty())
+                        return null;
+                }
 
+                else if (c1.equalsIgnoreCase(c3) && c2.equals("E")
+                        && newState.getDomain().get(i).get(j + 1).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i, j + 1, c1.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j + 1).isEmpty())
+                        return null;
+                }
 
-                    //System.out.println("hor " + i + " " + j + " " + c1);
-                    return false;
+                else if (c2.equalsIgnoreCase(c3) && c1.equals("E")
+                        && newState.getDomain().get(i).get(j).contains(c2.toLowerCase())) {
+                    newState.removeIndexDomain(i, j , c2.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j ).isEmpty())
+                        return null;
                 }
             }
         }
         //column
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < n-2; i++) {
+                ArrayList<String> row = cBoard.get(i);
                 String c1 = cBoard.get(i).get(j).toUpperCase();
                 String c2 = cBoard.get(i+1).get(j).toUpperCase();
                 String c3 = cBoard.get(i+2).get(j).toUpperCase();
-                if (c1.equals(c2) && c2.equals(c3) && !c1.equals("E")) {
+                if (c1.equalsIgnoreCase(c2) && c2.equalsIgnoreCase(c3) && !c1.equalsIgnoreCase("E")) {
                     //System.out.println("col");
-                    return false;
+                    return null;
+                }
+                else if ( c1.equalsIgnoreCase(c2) && c3.equals("E")
+                        && newState.getDomain().get(i).get(j + 2).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i, j + 2, c1.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j + 2).isEmpty())
+                        return null;
+                }
+
+                else if (c1.equalsIgnoreCase(c3) && c2.equals("E")
+                        && newState.getDomain().get(i).get(j + 1).contains(c1.toLowerCase())) {
+                    newState.removeIndexDomain(i, j + 1, c1.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j + 1).isEmpty())
+                        return null;
+                }
+
+                else if (c2.equalsIgnoreCase(c3) && c1.equals("E")
+                        && newState.getDomain().get(i).get(j).contains(c2.toLowerCase())) {
+                    newState.removeIndexDomain(i, j , c2.toLowerCase());
+                    newState.limit++;
+                    if (newState.getDomain().get(i).get(j ).isEmpty())
+                        return null;
                 }
             }
         }
 
-        return true;
+        return newState;
     }
     
     private boolean checkIfUnique (State state) {
