@@ -99,6 +99,7 @@ public class Binairo {
     
     private boolean checkNumberOfCircles(State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
+        State newState = state.copy();
         //row
         for (int i = 0; i < n; i++) {
             int numberOfWhites = 0;
@@ -112,6 +113,28 @@ public class Binairo {
             }
             if (numberOfBlacks > n/2 || numberOfWhites > n/2) {
                 return false;
+            }
+            if (numberOfBlacks == n/2) {
+                for (int j = 0; j < n; j++) {
+                    String a = cBoard.get(i).get(j);
+                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("b")) {
+                        newState.removeIndexDomain(i, j, "b");
+                        newState.limit++;
+                        if (newState.getDomain().get(i).get(j).isEmpty())
+                            return null;
+                    }
+                }
+            }
+            if (numberOfWhites == n/2) {
+                for (int j = 0; j < n; j++) {
+                    String a = cBoard.get(i).get(j);
+                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("a")) {
+                        newState.removeIndexDomain(i, j, "a");
+                        newState.limit++;
+                        if (newState.getDomain().get(i).get(j).isEmpty())
+                            return null;
+                    }
+                }
             }
         }
         //column
@@ -127,6 +150,29 @@ public class Binairo {
             }
             if (numberOfBlacks > n/2 || numberOfWhites > n/2) {
                 return false;
+            }
+
+            if (numberOfBlacks == n/2) {
+                for (int j = 0; j < n; j++) {
+                    String a = cBoard.get(i).get(j);
+                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("b")) {
+                        newState.removeIndexDomain(i, j, "b");
+                        newState.limit++;
+                        if (newState.getDomain().get(i).get(j).isEmpty())
+                            return null;
+                    }
+                }
+            }
+            if (numberOfWhites == n/2) {
+                for (int j = 0; j < n; j++) {
+                    String a = cBoard.get(i).get(j);
+                    if (a.equals("E") && newState.getDomain().get(i).get(j).contains("a")) {
+                        newState.removeIndexDomain(i, j, "a");
+                        newState.limit++;
+                        if (newState.getDomain().get(i).get(j).isEmpty())
+                            return null;
+                    }
+                }
             }
         }
         return true;
