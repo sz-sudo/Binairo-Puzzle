@@ -43,8 +43,7 @@ public class Main {
                         "n"
                 )));
                 
-            } //Board and Domain initialized
-            //System.out.println("main " + board.get(1).get(1));
+            } 
             Binairo binairo = new Binairo(board, domain, n);
             binairo.start();
             reader.close();
