@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        File input = new File("inputs/input2.txt");
+        File input = new File("inputs/input3.txt");
         ArrayList<ArrayList<String>> board = new ArrayList<>();
         ArrayList<ArrayList<ArrayList<String>>> domain = new ArrayList<>();
         try {
@@ -44,6 +44,7 @@ public class Main {
                 )));
                 
             } //Board and Domain initialized
+            //System.out.println("main " + board.get(1).get(1));
             Binairo binairo = new Binairo(board, domain, n);
             binairo.start();
             reader.close();

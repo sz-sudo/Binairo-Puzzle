@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 public class Binairo {
     private final ArrayList<ArrayList<String>> board;
@@ -21,11 +23,79 @@ public class Binairo {
         System.out.println("Initial Board: \n");
         state.printBoard();
         drawLine();
+        //System.out.println("DFgdfgdfgdfgdgdfgdfgfdgg");
 
-        // backtrack(state);
+        State res = backtrack(state);
+        if (res != null) {
+            System.out.println("Final Board: \n");
+            res.printBoard();
+            drawLine();
+        }
+        else {
+            System.out.println("No solution!");
+        }
         long tEnd = System.nanoTime();
         System.out.println("Total time: " + (tEnd - tStart)/1000000000.000000000);
     }
+
+    private State backtrack(State state) {
+        if (allAssigned(state))
+            return state;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+
+                    if (state.getBoard().get(i).get(j).equals("E")) {
+                        System.out.println("Empty " + i + " " + j);
+                        String s = "w";
+                        while(!state.getDomain().get(i).get(j).isEmpty()) {
+                            ArrayList<ArrayList<String>> cBoard = state.getBoard();
+                            ArrayList<ArrayList<ArrayList<String>>> cDomain = state.getDomain();
+
+                            System.out.println(i + " " + j + " " + s);
+                            cBoard.get(i).set(j, s);
+                            cDomain.get(i).set(j, new ArrayList<>(List.of(
+                                    "n"
+                            )));
+                            state.getDomain().get(i).get(j).remove(s);
+
+                            State newState = new State(cBoard, cDomain);
+
+                            if (isConsistent(newState)) {
+                                System.out.println("raft tu");
+                                State res = backtrack(newState);
+                                if (res!= null) {
+                                    //System.out.println("answer found");
+                                    return res;
+                                }
+                                else if (s.equals("b")) {
+                                    System.out.println("bargasht");
+                                    cBoard.get(i).set(j, "E");
+                                    cDomain.get(i).set(j, new ArrayList<>(List.of(
+                                            "w",
+                                            "b"
+                                    )));
+                                    return null;
+                                }
+                            }
+                            else if(s.equals("b")) {
+                                System.out.println("bargasht 2");
+                                cBoard.get(i).set(j, "E");
+                                cDomain.get(i).set(j, new ArrayList<>(List.of(
+                                        "w",
+                                        "b"
+                                )));
+                                return null;
+                            }
+                            s = "b";
+                        }
+                    }
+            }
+        }
+
+        return null;
+    }
+
     
     private boolean checkNumberOfCircles(State state) {
         ArrayList<ArrayList<String>> cBoard = state.getBoard();
@@ -73,6 +143,9 @@ public class Binairo {
                 String c2 = row.get(j+1).toUpperCase();
                 String c3 = row.get(j+2).toUpperCase();
                 if (c1.equals(c2) && c2.equals(c3) && !c1.equals("E")) {
+
+
+                    //System.out.println("hor " + i + " " + j + " " + c1);
                     return false;
                 }
             }
@@ -84,6 +157,7 @@ public class Binairo {
                 String c2 = cBoard.get(i+1).get(j).toUpperCase();
                 String c3 = cBoard.get(i+2).get(j).toUpperCase();
                 if (c1.equals(c2) && c2.equals(c3) && !c1.equals("E")) {
+                    //System.out.println("col");
                     return false;
                 }
             }
@@ -149,6 +223,12 @@ public class Binairo {
     }
 
     private boolean isConsistent(State state) {
+        if (checkNumberOfCircles(state))
+            System.out.println("number");
+        if (checkAdjacency(state))
+            System.out.println("adj");
+        if (checkIfUnique(state))
+            System.out.println("uniq");
         return checkNumberOfCircles(state) && checkAdjacency(state) && checkIfUnique(state);
     }
 
